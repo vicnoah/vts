@@ -70,7 +70,7 @@ func Upload(sftpClient *sftp.Client, localPath string, remotePath string) (err e
 		ctx := context.Background()
 		progressChan := progress.NewTicker(ctx, r, size, 1*time.Second)
 		for p := range progressChan {
-			fmt.Printf("\ruploading: %s per: %f, remaining: %v", path.Base(localPath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
+			fmt.Printf("\ruploading: %s per: %d, remaining: %v", path.Base(localPath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
 		}
 	}()
 
@@ -103,7 +103,7 @@ func Download(sftpClient *sftp.Client, remotePath string, localPath string) (err
 		ctx := context.Background()
 		progressChan := progress.NewTicker(ctx, r, size, 1*time.Second)
 		for p := range progressChan {
-			fmt.Printf("\rdownloading: %s per: %f, remaining: %v", path.Base(remotePath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
+			fmt.Printf("\rdownloading: %s per: %d, remaining: %v", path.Base(remotePath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
 		}
 	}()
 
