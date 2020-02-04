@@ -24,7 +24,6 @@ var (
 	ext       string // 文件扩展名
 	formats   string // 需转码格式
 	filters   string // 需过滤路径包含字符
-	image     string // docker镜像名称
 )
 
 func init() {
@@ -40,7 +39,6 @@ func init() {
 	flag.StringVar(&ext, "ext", "webm", "`target file ext name`")
 	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcoding `video's extension name`")
 	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
-	flag.StringVar(&image, "image", "jrottenberg/ffmpeg:4.1-vaapi", "`ffmpeg docker image`.Image needs to match accelerator.")
 	// 改变默认的 Usage，flag包中的Usage 其实是一个函数类型。这里是覆盖默认函数实现，具体见后面Usage部分的分析
 	flag.Usage = usage
 }
