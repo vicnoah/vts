@@ -35,7 +35,7 @@ func init() {
 	flag.StringVar(&workDir, "w", "/opt/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
 	flag.StringVar(&cmd, "cmd",
-		`docker run -i --rm -v=%volume% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%;`, "`command template`. Similar to %name% are variables. %volume%: docker volume, %input%: input video file, %output%: output vodeo file")
+		`docker run -i --rm -v=%volume%:%volume% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%;`, "`command template`. Similar to %name% are variables. %volume%: docker volume, %input%: input video file, %output%: output vodeo file")
 	flag.StringVar(&ext, "ext", "webm", "`target file ext name`")
 	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcoding `video's extension name`")
 	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
