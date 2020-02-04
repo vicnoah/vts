@@ -20,20 +20,27 @@ var (
 	pass      string // 远程密码
 	addr      string // 地址
 	port      int    // 远程端口
+	cmd       string // 转码命令
+	ext       string // 文件扩展名
 	formats   string // 需转码格式
 	filters   string // 需过滤路径包含字符
+	image     string // docker镜像名称
 )
 
 func init() {
 	flag.BoolVar(&help, "help", false, "help")
-	flag.StringVar(&user, "u", "root", "sftp or scp connect `user name`")
-	flag.StringVar(&pass, "pass", "123456", "sftp or scp connect `user password`")
-	flag.StringVar(&addr, "addr", "192.168.0.1", "`network address`")
-	flag.IntVar(&port, "p", 22, "sftp or scp `port`")
+	flag.StringVar(&user, "u", "root", "sftp connect's `user name`")
+	flag.StringVar(&pass, "pass", "123456", "sftp connect's `user password`")
+	flag.StringVar(&addr, "addr", "192.168.0.1", "sftp server's `network address`")
+	flag.IntVar(&port, "p", 22, "sftp's `port`")
 	flag.StringVar(&workDir, "w", "/opt/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
-	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcode `video's extension name`")
-	flag.StringVar(&filters, "flt", "vr", "You would like to `filter path`")
+	flag.StringVar(&cmd, "cmd",
+		`docker run -i --rm -v=%volume% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%;`, "`command template`. Similar to %name% are variables. %volume%: docker volume, %input%: input video file, %output%: output vodeo file")
+	flag.StringVar(&ext, "ext", "webm", "`target file ext name`")
+	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcoding `video's extension name`")
+	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
+	flag.StringVar(&image, "image", "jrottenberg/ffmpeg:4.1-vaapi", "`ffmpeg docker image`.Image needs to match accelerator.")
 	// 改变默认的 Usage，flag包中的Usage 其实是一个函数类型。这里是覆盖默认函数实现，具体见后面Usage部分的分析
 	flag.Usage = usage
 }
@@ -41,7 +48,6 @@ func init() {
 // Start 启动程序
 func Start() {
 	flag.Parse()
-
 	workDir = path.Clean(workDir)
 	remoteDir = path.Clean(remoteDir)
 
@@ -60,9 +66,9 @@ func Start() {
 			switch s {
 			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
 				cancel()
-				fmt.Println("\nQuit:", s)
+				fmt.Printf("\nQuit: %s\n", s)
 			default:
-				fmt.Println("\nother:", s)
+				fmt.Printf("\nother: %s\n", s)
 			}
 		}
 	}()
@@ -73,18 +79,13 @@ func Start() {
 
 // boot 引导主程序
 func boot(ctx context.Context) {
-	worker.Run(ctx, user, pass, addr, port, workDir, remoteDir, formats, filters)
+	worker.Run(ctx, user, pass, addr, port, workDir, remoteDir, cmd, ext, formats, filters)
 	return
-}
-
-// parseConfig 解析配置
-func parseConfig() {
-
 }
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `vts version: vts/1.0.0
-Usage: vts [-u username] [-pass password] [-w workdir] [-w remotedir]
+Usage: vts [-u username] [-pass password] [-add network address] [-w workdir] [-w remotedir]
 
 Options:
 `)

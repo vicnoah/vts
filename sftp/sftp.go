@@ -46,13 +46,13 @@ func Connect(user, password, host string, port int) (client *sftp.Client, err er
 }
 
 // ReadDir 读取目录
-func ReadDir(sftpClient *sftp.Client, path string) (files []os.FileInfo, err error) {
+func ReadDir(path string, sftpClient *sftp.Client) (files []os.FileInfo, err error) {
 	files, err = sftpClient.ReadDir(path)
 	return
 }
 
 // Upload 上传文件
-func Upload(sftpClient *sftp.Client, localPath string, remotePath string) (err error) {
+func Upload(ctx context.Context, localPath string, remotePath string, sftpClient *sftp.Client) (err error) {
 	fileInfo, err := os.Stat(localPath)
 	if err != nil {
 		return
@@ -72,6 +72,7 @@ func Upload(sftpClient *sftp.Client, localPath string, remotePath string) (err e
 		for p := range progressChan {
 			fmt.Printf("\ruploading: %s per: %d, remaining: %v", path.Base(localPath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
 		}
+		fmt.Println("\n")
 	}()
 
 	dstFile, err := sftpClient.Create(remotePath)
@@ -80,12 +81,29 @@ func Upload(sftpClient *sftp.Client, localPath string, remotePath string) (err e
 	}
 	defer dstFile.Close()
 
-	_, err = io.CopyBuffer(dstFile, r, make([]byte, 204800))
-	return
+	working := false
+	done := false
+	for {
+		select {
+		case <-ctx.Done():
+			err = fmt.Errorf("close upload manually")
+			return
+		default:
+			if !working {
+				_, err = io.CopyBuffer(dstFile, r, make([]byte, 204800))
+				done = true
+				return
+			}
+			if done {
+				return
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}
 }
 
 // Download 下载文件
-func Download(sftpClient *sftp.Client, remotePath string, localPath string) (err error) {
+func Download(ctx context.Context, remotePath string, localPath string, sftpClient *sftp.Client) (err error) {
 	fileInfo, err := sftpClient.Stat(remotePath)
 	if err != nil {
 		return
@@ -105,6 +123,7 @@ func Download(sftpClient *sftp.Client, remotePath string, localPath string) (err
 		for p := range progressChan {
 			fmt.Printf("\rdownloading: %s per: %d, remaining: %v", path.Base(remotePath), int64(math.Floor(p.Percent())), p.Remaining().Round(time.Second))
 		}
+		fmt.Println("\n")
 	}()
 
 	dstFile, err := os.Create(localPath)
@@ -112,12 +131,33 @@ func Download(sftpClient *sftp.Client, remotePath string, localPath string) (err
 		return
 	}
 	defer dstFile.Close()
-	_, err = io.CopyBuffer(dstFile, r, make([]byte, 204800))
-	return
+
+	working := false
+	done := false
+	for {
+		select {
+		case <-ctx.Done():
+			err = fmt.Errorf("close download manually")
+			return
+		default:
+			if !working {
+				working = true
+				go func() {
+					_, err = io.CopyBuffer(dstFile, r, make([]byte, 204800))
+					done = true
+					return
+				}()
+			}
+			if done {
+				return
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}
 }
 
 // WriteFile 写文件
-func WriteFile(fileName string, sftpClient *sftp.Client, f int, b []byte) (err error) {
+func WriteFile(fileName string, f int, b []byte, sftpClient *sftp.Client) (err error) {
 	file, err := sftpClient.OpenFile(fileName, f)
 	if err != nil {
 		return

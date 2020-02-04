@@ -28,7 +28,7 @@ type FileLock struct {
 func (l *FileLock) Lock(fileName string, client *sftp.Client) (err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	err = sp.WriteFile(lockFileName(fileName), client, os.O_WRONLY|os.O_CREATE, []byte("locker"))
+	err = sp.WriteFile(lockFileName(fileName), os.O_WRONLY|os.O_CREATE, []byte("locker"), client)
 	return
 }
 
