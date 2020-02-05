@@ -107,27 +107,26 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 		fmt.Printf("\n转码%s流程开始->\n", path.Base(name))
 		time.Sleep(time.Second * 5)
 
-		/*
-			fmt.Printf("下载中:%s\n", name)
-			er := sp.Download(ctx, name, baseName, client)
-			if er != nil {
-				select {
-				case <-ctx.Done():
-					if e := os.Remove(baseName); e != nil {
-						err = e
-						return
-					}
-					err = er
-					return
-				default:
-					err = er
+		fmt.Printf("下载中:%s\n", name)
+		er := sp.Download(ctx, name, baseName, client)
+		if er != nil {
+			select {
+			case <-ctx.Done():
+				if e := os.Remove(baseName); e != nil {
+					err = e
 					return
 				}
-			}*/
+				err = er
+				return
+			default:
+				err = er
+				return
+			}
+		}
 
 		fmt.Printf("开始转码: %s\n", path.Base(name))
 		// transcode
-		er := transcode.Run(ctx, w, baseName, tempFile, ext, cmd)
+		er = transcode.Run(ctx, w, baseName, tempFile, ext, cmd)
 		if er != nil {
 			select {
 			case <-ctx.Done():
