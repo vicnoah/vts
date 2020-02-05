@@ -21,6 +21,7 @@ var (
 	addr      string // 地址
 	port      int    // 远程端口
 	cmd       string // 转码命令
+	mode      string // 工作模式
 	ext       string // 文件扩展名
 	formats   string // 需转码格式
 	filters   string // 需过滤路径包含字符
@@ -35,12 +36,20 @@ func init() {
 	flag.StringVar(&workDir, "w", "/opt/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
 	flag.StringVar(&cmd, "cmd",
-		`docker run -i --rm -v=%volume%:%volume% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%;`, "`command template`. Similar to %name% are variables. %volume%: docker volume, %input%: input video file, %output%: output vodeo file")
+		`docker run -i --rm -v=%workdir%:%workdir% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%;`, "`command template`. Similar to %name% are variables. %workdir%: work directory, %input%: input video file, %output%: output vodeo file")
 	flag.StringVar(&ext, "ext", "webm", "`target file ext name`")
+	flag.StringVar(&mode, "mode", "sftp", "`work mode.` eg: sftp, local, nfs")
 	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcoding `video's extension name`")
 	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
 	// 改变默认的 Usage，flag包中的Usage 其实是一个函数类型。这里是覆盖默认函数实现，具体见后面Usage部分的分析
-	flag.Usage = usage
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `vts version: vts/1.0.0
+Usage: vts [-u username] [-pass password] [-add network address] [-w workdir] [-w remotedir]
+
+Options:
+`)
+		flag.PrintDefaults()
+	}
 }
 
 // Start 启动程序
@@ -79,13 +88,4 @@ func Start() {
 func boot(ctx context.Context) {
 	worker.Run(ctx, user, pass, addr, port, workDir, remoteDir, cmd, ext, formats, filters)
 	return
-}
-
-func usage() {
-	fmt.Fprintf(os.Stderr, `vts version: vts/1.0.0
-Usage: vts [-u username] [-pass password] [-add network address] [-w workdir] [-w remotedir]
-
-Options:
-`)
-	flag.PrintDefaults()
 }

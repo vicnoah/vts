@@ -1,7 +1,7 @@
 package transcode
 
 const (
-	volume = "%volume%"
-	input  = "%input%"
-	output = "%output%"
+	_WORKDIR = "%workdir%"
+	_INPUT   = "%input%"
+	_OUTPUT  = "%output%"
 )
