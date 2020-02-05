@@ -45,7 +45,7 @@ func Run(ctx context.Context, u string, pass string, addr string, port int, w st
 		fmt.Println(f)
 	}
 	fmt.Printf("\n开始转码作业:\n")
-	err = batchTranscode(ctx, pts, w, client, cmd, ext)
+	err = batchTranscode(ctx, pts, w, ext, cmd, client)
 	if err != nil {
 		fmt.Printf("\nbatch transcode video error: %v\n", err)
 		return
@@ -98,7 +98,7 @@ func sftpFiles(fs []os.FileInfo, basePath string, formats string, filters string
 	return
 }
 
-func batchTranscode(ctx context.Context, fileNames []string, w string, client *sftp.Client, cmd string, ext string) (err error) {
+func batchTranscode(ctx context.Context, fileNames []string, w string, ext string, cmd string, client *sftp.Client) (err error) {
 	for _, name := range fileNames {
 		tempFile := path.Join(w, path.Base(name)+".temp."+ext)
 		remoteTempFile := name + ".temp"
@@ -107,26 +107,27 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, client *s
 		fmt.Printf("\n转码%s流程开始->\n", path.Base(name))
 		time.Sleep(time.Second * 5)
 
-		fmt.Printf("下载中:%s\n", name)
-		er := sp.Download(ctx, name, baseName, client)
-		if er != nil {
-			select {
-			case <-ctx.Done():
-				if e := os.Remove(baseName); e != nil {
-					err = e
+		/*
+			fmt.Printf("下载中:%s\n", name)
+			er := sp.Download(ctx, name, baseName, client)
+			if er != nil {
+				select {
+				case <-ctx.Done():
+					if e := os.Remove(baseName); e != nil {
+						err = e
+						return
+					}
+					err = er
+					return
+				default:
+					err = er
 					return
 				}
-				err = er
-				return
-			default:
-				err = er
-				return
-			}
-		}
+			}*/
 
 		fmt.Printf("开始转码: %s\n", path.Base(name))
 		// transcode
-		er = transcode.Run(ctx, w, baseName, tempFile, cmd)
+		er := transcode.Run(ctx, w, baseName, tempFile, ext, cmd)
 		if er != nil {
 			select {
 			case <-ctx.Done():

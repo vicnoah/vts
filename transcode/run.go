@@ -22,10 +22,11 @@ import (
 */
 
 // Run 转换视频
-func Run(ctx context.Context, workDir string, srcPath string, dstPath string, command string) (err error) {
+func Run(ctx context.Context, workDir string, srcPath string, dstPath string, ext string, command string) (err error) {
 	command = strings.ReplaceAll(command, _WORKDIR, workDir)
 	command = strings.ReplaceAll(command, _INPUT, srcPath)
 	command = strings.ReplaceAll(command, _OUTPUT, dstPath)
+	command = strings.ReplaceAll(command, _EXT, ext)
 	fmt.Printf("转码命令->\n%s\n", command)
 	ss := strings.Split(command, " ")
 	name := ss[0]
