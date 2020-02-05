@@ -44,12 +44,12 @@ func Run(ctx context.Context, u string, pass string, addr string, port int, w st
 	for _, f := range pts {
 		fmt.Println(f)
 	}
-	fmt.Printf("\n开始转码作业:\n")
+	/*fmt.Printf("\n开始转码作业:\n")
 	err = batchTranscode(ctx, pts, w, ext, cmd, client)
 	if err != nil {
 		fmt.Printf("\nbatch transcode video error: %v\n", err)
 		return
-	}
+	}*/
 }
 
 func sftpFiles(fs []os.FileInfo, basePath string, formats string, filters string, client *sftp.Client) (paths []string, err error) {
@@ -69,16 +69,22 @@ func sftpFiles(fs []os.FileInfo, basePath string, formats string, filters string
 			paths = append(paths, pts...)
 		} else {
 			isExist := false
-			for _, format := range strings.Split(formats, ",") {
-				if strings.Contains(strings.ToLower(path.Ext(f.Name())), strings.Trim(format, " ")) {
-					isExist = true
+			if formats != "" {
+				for _, format := range strings.Split(formats, ",") {
+					if strings.Contains(strings.ToLower(path.Ext(f.Name())), strings.Trim(format, " ")) {
+						isExist = true
+					}
 				}
 			}
 			if isExist {
 				isFilter := false
-				for _, filter := range strings.Split(filters, ",") {
-					if strings.Contains(strings.ToLower(path.Join(basePath, f.Name())), strings.Trim(filter, " ")) {
-						isFilter = true
+				if filters == "" {
+					isFilter = false
+				} else {
+					for _, filter := range strings.Split(filters, ",") {
+						if strings.Contains(strings.ToLower(path.Join(basePath, f.Name())), strings.Trim(filter, " ")) {
+							isFilter = true
+						}
 					}
 				}
 				if !isFilter {
