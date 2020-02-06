@@ -17,18 +17,26 @@ import (
 // Run 开始转码作业
 func Run(ctx context.Context, u string, pass string, addr string, port int, w string, r string, cmd string, ext string, formats string, filters string) {
 	var (
+		ssh = file_transfer.NewSSH()
 		sp  = file_transfer.NewSFTP()
 		err error
 	)
-	err = sp.Connect(u,
+	err = ssh.SetConfig(u,
 		pass,
 		addr,
 		port)
+	if err != nil {
+		fmt.Printf("ssh config error: %v\n", err)
+		return
+	}
+
+	err = sp.Connect(ssh.Addr(), ssh.Config())
 	if err != nil {
 		fmt.Printf("sftp connect error: %v\n", err)
 		return
 	}
 	defer sp.Close()
+
 	files, err := sp.ReadDir(r)
 	if err != nil {
 		fmt.Printf("reading sftp \"%s\" directory error: %v\n", r, err)

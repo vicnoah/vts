@@ -24,31 +24,11 @@ type SFTP struct {
 }
 
 // Connect 连接sftp
-func (s *SFTP) Connect(user, password, host string, port int) (err error) {
-	var (
-		auth         []ssh.AuthMethod
-		addr         string
-		clientConfig *ssh.ClientConfig
-		sshClient    *ssh.Client
-	)
-	// get auth method
-	auth = make([]ssh.AuthMethod, 0)
-	auth = append(auth, ssh.Password(password))
-
-	clientConfig = &ssh.ClientConfig{
-		User:            user,
-		Auth:            auth,
-		Timeout:         30 * time.Second,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //ssh.FixedHostKey(hostKey),
-	}
-
-	// connet to ssh
-	addr = fmt.Sprintf("%s:%d", host, port)
-	sshClient, err = ssh.Dial("tcp", addr, clientConfig)
+func (s *SFTP) Connect(addr string, sshConfig *ssh.ClientConfig) (err error) {
+	sshClient, err := ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
 		return
 	}
-
 	// create sftp client
 	s.client, err = sftp.NewClient(sshClient)
 	return
