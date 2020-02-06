@@ -4,10 +4,6 @@ import (
 	"os"
 	"path"
 	"sync"
-
-	sp "github.com/vicnoah/vts/sftp"
-
-	"github.com/pkg/sftp"
 )
 
 const (
@@ -19,31 +15,39 @@ func New() *FileLock {
 	return &FileLock{}
 }
 
+// Locker 锁接口
+type Locker interface {
+	WriteFile(string, int, []byte) error
+	Remove(string) error
+	Stat(string) (os.FileInfo, error)
+}
+
 // FileLock 文件锁结构
 type FileLock struct {
-	mu sync.Mutex
+	mu     sync.Mutex
+	locker Locker
 }
 
 // Lock 创建文件锁
-func (l *FileLock) Lock(fileName string, client *sftp.Client) (err error) {
+func (l *FileLock) Lock(fileName string, lk Locker) (err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	err = sp.WriteFile(lockFileName(fileName), os.O_WRONLY|os.O_CREATE, []byte("locker"), client)
+	err = l.locker.WriteFile(lockFileName(fileName), os.O_WRONLY|os.O_CREATE, []byte("locker"))
 	return
 }
 
 // Unlock 删除文件锁
-func (l *FileLock) Unlock(fileName string, client *sftp.Client) error {
+func (l *FileLock) Unlock(fileName string, lk Locker) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return sp.Remove(lockFileName(fileName), client)
+	return lk.Remove(lockFileName(fileName))
 }
 
 // IsLock 判断文件锁是否存在
-func (l *FileLock) IsLock(fileName string, client *sftp.Client) (isLock bool, err error) {
+func (l *FileLock) IsLock(fileName string, lk Locker) (isLock bool, err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	_, err = sp.Stat(lockFileName(fileName), client)
+	_, err = lk.Stat(lockFileName(fileName))
 	if err != nil {
 		if os.IsNotExist(err) {
 			isLock = false
