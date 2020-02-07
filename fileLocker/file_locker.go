@@ -24,15 +24,14 @@ type Locker interface {
 
 // FileLock 文件锁结构
 type FileLock struct {
-	mu     sync.Mutex
-	locker Locker
+	mu sync.Mutex
 }
 
 // Lock 创建文件锁
 func (l *FileLock) Lock(fileName string, lk Locker) (err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	err = l.locker.WriteFile(lockFileName(fileName), os.O_WRONLY|os.O_CREATE, []byte("locker"))
+	err = lk.WriteFile(lockFileName(fileName), os.O_WRONLY|os.O_CREATE, []byte("locker"))
 	return
 }
 
