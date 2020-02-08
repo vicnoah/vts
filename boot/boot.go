@@ -86,6 +86,9 @@ func Start() {
 
 // boot 引导主程序
 func boot(ctx context.Context) {
-	worker.Run(ctx, user, pass, addr, port, workDir, remoteDir, cmd, ext, formats, filters)
+	err := worker.Run(ctx, user, pass, addr, port, workDir, remoteDir, cmd, ext, formats, filters, mode)
+	if err != nil {
+		fmt.Printf("\n%v\n", err)
+	}
 	return
 }

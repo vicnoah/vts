@@ -44,8 +44,8 @@ func (s *SFTP) Client() *sftp.Client {
 	return s.client
 }
 
-// Upload 上传文件
-func (s *SFTP) Upload(ctx context.Context, srcFile *os.File, dst io.Writer) (err error) {
+// Send 上传文件
+func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -84,8 +84,8 @@ func (s *SFTP) Upload(ctx context.Context, srcFile *os.File, dst io.Writer) (err
 	}
 }
 
-// Download 下载文件
-func (s *SFTP) Download(ctx context.Context, srcFile *sftp.File, dst io.Writer) (err error) {
+// Recv 下载文件
+func (s *SFTP) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -139,12 +139,12 @@ func (s *SFTP) WriteFile(fileName string, f int, b []byte) (err error) {
 }
 
 // Open 打开文件
-func (s *SFTP) Open(path string) (*sftp.File, error) {
+func (s *SFTP) Open(path string) (ReadWriteStatCloser, error) {
 	return s.client.Open(path)
 }
 
 // OpenFile 打开文件
-func (s *SFTP) OpenFile(path string, f int) (*sftp.File, error) {
+func (s *SFTP) OpenFile(path string, f int) (ReadWriteStatCloser, error) {
 	return s.client.OpenFile(path, f)
 }
 
