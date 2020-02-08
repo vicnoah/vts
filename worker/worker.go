@@ -123,14 +123,15 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 	}()
 	for _, name := range fileNames {
 		ts.Clean()
-		// 本地转码缓存文件(workdir + name + ".temp." + ext)
-		localTempFile := path.Join(w, path.Base(name)+".temp."+ext)
-		// 文件上传原始文件备份名称(remoteName + ".temp")
-		remoteTempFile := name + ".temp"
 		// 文件下载路径(workdir + name)
-		localName := path.Join(w, path.Base(name))
+		cacheName := path.Join(w, path.Base(name))
+		// 本地转码缓存文件(workdir + name + ".temp." + ext)
+		cacheTempFile := path.Join(w, path.Base(name)+".temp."+ext)
 		// 远程文件名称，转码后结果文件，替换原始文件。(remoteName - oldExt + newExt)
 		remoteFile := path.Join(path.Dir(name), strings.Replace(path.Base(name), path.Ext(name), "", -1)+"."+ext)
+		// 文件上传原始文件备份名称(remoteName + ".temp")
+		remoteTempFile := name + ".temp"
+
 		fmt.Printf("\n转码%s流程开始->\n", path.Base(name))
 		time.Sleep(time.Second * 5)
 
@@ -143,7 +144,7 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 		}
 		defer dlSrcFile.Close()
 
-		dlDstFile, er := os.OpenFile(localName, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+		dlDstFile, er := os.OpenFile(cacheName, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		if er != nil {
 			err = er
 			return
@@ -151,8 +152,7 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 		defer dlDstFile.Close()
 		// 出错后已下载本地文件清理
 		ts.Add(func() error {
-			fmt.Println("remove", localName)
-			return os.Remove(localName)
+			return os.Remove(cacheName)
 		})
 
 		er = sp.Download(ctx, dlSrcFile, dlDstFile)
@@ -163,11 +163,11 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 
 		fmt.Printf("开始转码: %s\n", path.Base(name))
 		// transcode
-		er = transcode.Run(ctx, w, localName, localTempFile, ext, cmd)
+		er = transcode.Run(ctx, w, cacheName, cacheTempFile, ext, cmd)
 		if er != nil {
 			// 出错后本地转码缓存文件清理
 			ts.Add(func() error {
-				return os.Remove(localTempFile)
+				return os.Remove(cacheTempFile)
 			})
 			err = er
 			return
@@ -185,9 +185,9 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 			return sp.Rename(remoteTempFile, name)
 		})
 
-		fmt.Printf("开始上传: %s\n", localTempFile)
+		fmt.Printf("开始上传: %s\n", cacheTempFile)
 		// upload
-		ulSrcFile, er := os.Open(localTempFile)
+		ulSrcFile, er := os.Open(cacheTempFile)
 		if er != nil {
 			err = er
 			return
@@ -230,12 +230,12 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 		}
 
 		// delete
-		er = os.Remove(localTempFile)
+		er = os.Remove(cacheTempFile)
 		if er != nil {
 			err = er
 			return
 		}
-		er = os.Remove(localName)
+		er = os.Remove(cacheName)
 		if er != nil {
 			err = er
 			return
