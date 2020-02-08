@@ -123,6 +123,7 @@ func batchTranscode(ctx context.Context, fileNames []string, w string, ext strin
 	}()
 	for _, name := range fileNames {
 		ts.Clean()
+		ts.Is()
 		// 文件下载路径(workdir + name)
 		cacheName := path.Join(w, path.Base(name))
 		// 本地转码缓存文件(workdir + name + ".temp." + ext)
