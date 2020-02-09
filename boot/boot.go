@@ -18,13 +18,13 @@ var (
 	help             bool   // 帮助
 	workDir          string // 本地工作路径
 	remoteDir        string // 远程工作路径
+	cmd              string // 转码命令
+	mode             string // 工作模式
+	ext              string // 文件扩展名
 	sftpUser         string // sftp用户名
 	sftpPass         string // sftp密码
 	sftpAddr         string // sftp地址
 	sftpPort         int    // sftp端口
-	cmd              string // 转码命令
-	mode             string // 工作模式
-	ext              string // 文件扩展名
 	sftpAuth         string // sftp认证方式
 	sftpIdentityFile string // openssh密钥文件
 	sftpIdentityPass string // openssh私钥密码
@@ -43,7 +43,7 @@ func init() {
 
 	flag.StringVar(&mode, "mode", "sftp", "`work mode.` eg: sftp, local, nfs")
 
-	flag.StringVar(&workDir, "w", "/opt/vts", "local `workdir`: download, transcode, upload")
+	flag.StringVar(&workDir, "w", "~/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
 
 	flag.StringVar(&sftpUser, "sftp_user", "root", "sftp connect's `user name`")
@@ -78,14 +78,19 @@ func Start() {
 		if strings.Contains(sftpIdentityFile, envKey) {
 			sftpIdentityFile = parseHome(homeEnv, envKey, sftpIdentityFile)
 		}
+		if strings.Contains(workDir, envKey) {
+			workDir = parseHome(homeEnv, envKey, workDir)
+		}
 	} else {
 		homeEnv := "HOME"
 		envKey := "~"
 		if strings.Contains(sftpIdentityFile, envKey) {
 			sftpIdentityFile = parseHome(homeEnv, envKey, sftpIdentityFile)
 		}
+		if strings.Contains(workDir, envKey) {
+			workDir = parseHome(homeEnv, envKey, workDir)
+		}
 	}
-
 	if help {
 		flag.Usage()
 		return
