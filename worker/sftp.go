@@ -13,17 +13,37 @@ import (
 	"github.com/vicnoah/vts/transcode"
 )
 
-func runSFTP(ctx context.Context, u string, pass string, addr string, port int, w string, r string, cmd string, ext string, formats string, filters string) (err error) {
+const (
+	_AUTH_PASSWORD = "password"
+	_AUTH_KEY      = "key"
+)
+
+func runSFTP(ctx context.Context, cmd, ext, formats, filters, w, r, u, pass, addr string, port int, auth, identityFile, identityPass string) (err error) {
 	var (
 		ssh = file_transfer.NewSSH()
 		sp  = file_transfer.NewSFTP()
 	)
-	err = ssh.SetConfig(u,
-		pass,
-		addr,
-		port)
-	if err != nil {
-		err = fmt.Errorf("ssh config error: %v", err)
+	if auth == _AUTH_KEY {
+		err = ssh.SetConfigWithKey(u,
+			identityFile,
+			identityPass,
+			addr,
+			port)
+		if err != nil {
+			err = fmt.Errorf("ssh config error: %v", err)
+			return
+		}
+	} else if auth == _AUTH_PASSWORD {
+		err = ssh.SetConfig(u,
+			pass,
+			addr,
+			port)
+		if err != nil {
+			err = fmt.Errorf("ssh config error: %v", err)
+			return
+		}
+	} else {
+		err = fmt.Errorf("ssh config err: %s %s", auth, "authentication mode does not exist")
 		return
 	}
 

@@ -2,6 +2,8 @@ package file_transfer
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -39,14 +41,32 @@ func (s *SSH) SetConfig(user, password, host string, port int) (err error) {
 }
 
 // SetConfigWithKey 配置key认证服务器
-func (s *SSH) SetConfigWithKey(user string, key []byte, host string, port int) (err error) {
+func (s *SSH) SetConfigWithKey(user, fileName, keyPass, host string, port int) (err error) {
 	var (
 		auth []ssh.AuthMethod
 	)
-	signer, err := ssh.ParsePrivateKey(key)
+	f, err := os.Open(fileName)
 	if err != nil {
 		return
 	}
+	defer f.Close()
+	pemBytes, err := ioutil.ReadAll(f)
+	if err != nil {
+		return
+	}
+	var signer ssh.Signer
+	if keyPass == "" {
+		signer, err = ssh.ParsePrivateKey(pemBytes)
+		if err != nil {
+			return
+		}
+	} else {
+		signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(keyPass))
+		if err != nil {
+			return
+		}
+	}
+
 	// get auth method
 	auth = make([]ssh.AuthMethod, 0)
 	auth = append(auth, ssh.PublicKeys(signer))

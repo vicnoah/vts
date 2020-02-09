@@ -11,10 +11,10 @@ const (
 )
 
 // Run 开始转码作业
-func Run(ctx context.Context, u string, pass string, addr string, port int, w string, r string, cmd string, ext string, formats string, filters string, mode string) (err error) {
+func Run(ctx context.Context, cmd, ext, formats, filters, workDir, remoteDir, mode, sftpUser, sftpPass, sftpAddr string, sftpPort int, sftpAuth, sftpIdentityFile, sftpIdentityPass string) (err error) {
 	switch mode {
 	case MODE_SFTP:
-		er := runSFTP(ctx, u, pass, addr, port, w, r, cmd, ext, formats, filters)
+		er := runSFTP(ctx, cmd, ext, formats, filters, workDir, remoteDir, sftpUser, sftpPass, sftpAddr, sftpPort, sftpAuth, sftpIdentityFile, sftpIdentityPass)
 		if er != nil {
 			err = er
 			return
