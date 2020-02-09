@@ -20,6 +20,12 @@ func Run(ctx context.Context, cmd, ext, formats, filters, workDir, remoteDir, mo
 			err = er
 			return
 		}
+	case _MODE_LOCAL:
+		er := runLocal(ctx, cmd, ext, formats, filters, workDir, remoteDir)
+		if er != nil {
+			err = er
+			return
+		}
 	default:
 		err = fmt.Errorf("transcode mode %s is not supportd", mode)
 		return
