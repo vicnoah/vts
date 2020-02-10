@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -18,7 +19,8 @@ var (
 	help             bool   // 帮助
 	workDir          string // 本地工作路径
 	remoteDir        string // 远程工作路径
-	cmd              string // 转码命令
+	cmd              string // 转码命令转码
+	cmdFile          string // 转码命令文件
 	mode             string // 工作模式
 	ext              string // 文件扩展名
 	sftpUser         string // sftp用户名
@@ -37,6 +39,7 @@ func init() {
 
 	flag.StringVar(&cmd, "cmd",
 		`docker run -i --rm -v=%workdir%:%workdir% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%`, "`command template`. Similar to %name% are variables. %workdir%: work directory, %input%: input video file, %output%: output vodeo file, %ext%: ext name")
+	flag.StringVar(&cmdFile, "f", "", "`Use the CMD file file instead of the CMD command`. Use UTF-8 encoding for the file.")
 	flag.StringVar(&ext, "ext", "webm", "`target file ext name`")
 	flag.StringVar(&formats, "fmt", "mp4, mpeg4, wmv, mkv, avi", "You would like to transcoding `video's extension name`")
 	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
@@ -46,13 +49,13 @@ func init() {
 	flag.StringVar(&workDir, "w", "~/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
 
-	flag.StringVar(&sftpUser, "sftp_user", "root", "sftp connect's `user name`")
-	flag.StringVar(&sftpPass, "sftp_pass", "123456", "sftp connect's `user password`")
-	flag.StringVar(&sftpAddr, "sftp_addr", "192.168.0.1", "sftp server's `network address`")
-	flag.IntVar(&sftpPort, "sftp_port", 22, "sftp's `port`")
-	flag.StringVar(&sftpAuth, "sftp_auth", "password", "`SFTP authentication mode` supports password authentication and key authentication")
-	flag.StringVar(&sftpIdentityFile, "sftp_identity_file", "~/.ssh/id_rsa", "`sftp private key file path`")
-	flag.StringVar(&sftpIdentityPass, "sftp_indentity_pass", "", "`sftp private key's password`")
+	flag.StringVar(&sftpUser, "s:user", "root", "sftp connect's `user name`")
+	flag.StringVar(&sftpPass, "s:pass", "123456", "sftp connect's `user password`")
+	flag.StringVar(&sftpAddr, "s:addr", "192.168.0.1", "sftp server's `network address`")
+	flag.IntVar(&sftpPort, "s:port", 22, "sftp's `port`")
+	flag.StringVar(&sftpAuth, "s:auth", "password", "`SFTP authentication mode` supports password authentication and key authentication")
+	flag.StringVar(&sftpIdentityFile, "s:iden:file", "~/.ssh/id_rsa", "`sftp private key file path`")
+	flag.StringVar(&sftpIdentityPass, "s:iden:pass", "", "`sftp private key's password`")
 
 	// 改变默认的 Usage，flag包中的Usage 其实是一个函数类型。这里是覆盖默认函数实现，具体见后面Usage部分的分析
 	flag.Usage = func() {
@@ -81,6 +84,9 @@ func Start() {
 		if strings.Contains(workDir, envKey) {
 			workDir = parseHome(homeEnv, envKey, workDir)
 		}
+		if strings.Contains(cmdFile, envKey) {
+			cmdFile = parseHome(homeEnv, envKey, cmdFile)
+		}
 	} else {
 		homeEnv := "HOME"
 		envKey := "~"
@@ -90,7 +96,27 @@ func Start() {
 		if strings.Contains(workDir, envKey) {
 			workDir = parseHome(homeEnv, envKey, workDir)
 		}
+		if strings.Contains(cmdFile, envKey) {
+			workDir = parseHome(homeEnv, envKey, cmdFile)
+		}
 	}
+
+	// 读取命令
+	if cmdFile != "" {
+		f, er := os.Open(cmdFile)
+		if er != nil {
+			fmt.Printf("\nfailed to read CMD file: %v\n", er)
+			return
+		}
+		con, er := ioutil.ReadAll(f)
+		if er != nil {
+			fmt.Printf("\nfailed to read CMD file: %v\n", er)
+			return
+		}
+		cmd = string(con)
+		f.Close()
+	}
+
 	if help {
 		flag.Usage()
 		return
