@@ -49,7 +49,7 @@ func (l *Local) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (er
 			return
 		default:
 			if !working {
-				_, err = io.Copy(dst, src)
+				_, err = io.CopyBuffer(dst, src, make([]byte, 1024*1024))
 				done = true
 				return
 			}
@@ -89,7 +89,7 @@ func (l *Local) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (er
 			return
 		default:
 			if !working {
-				_, err = io.Copy(dst, src)
+				_, err = io.CopyBuffer(dst, src, make([]byte, 1024*1024))
 				done = true
 				return
 			}

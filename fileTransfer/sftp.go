@@ -72,7 +72,7 @@ func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err
 			return
 		default:
 			if !working {
-				_, err = io.Copy(dst, src)
+				_, err = io.CopyBuffer(dst, src, make([]byte, 1024*1024))
 				done = true
 				return
 			}
@@ -114,7 +114,7 @@ func (s *SFTP) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (err
 			if !working {
 				working = true
 				go func() {
-					_, err = io.Copy(dst, src)
+					_, err = io.CopyBuffer(dst, src, make([]byte, 1024*1024))
 					done = true
 					return
 				}()

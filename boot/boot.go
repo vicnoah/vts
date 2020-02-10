@@ -71,7 +71,6 @@ Options:
 // Start 启动程序
 func Start() {
 	flag.Parse()
-
 	if help {
 		flag.Usage()
 		return
@@ -119,8 +118,8 @@ func Start() {
 			fmt.Printf("\nfailed to read CMD file: %v\n", err)
 			return
 		}
-		cmd = string(con)
 		f.Close()
+		cmd = string(con)
 	}
 
 	// 缓存目录创建
