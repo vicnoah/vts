@@ -71,6 +71,12 @@ Options:
 // Start 启动程序
 func Start() {
 	flag.Parse()
+
+	if help {
+		flag.Usage()
+		return
+	}
+
 	// 路径一致处理
 	workDir = path.Clean(workDir)
 	remoteDir = path.Clean(remoteDir)
@@ -103,24 +109,39 @@ func Start() {
 
 	// 读取命令
 	if cmdFile != "" {
-		f, er := os.Open(cmdFile)
-		if er != nil {
-			fmt.Printf("\nfailed to read CMD file: %v\n", er)
+		f, err := os.Open(cmdFile)
+		if err != nil {
+			fmt.Printf("\nfailed to read CMD file: %v\n", err)
 			return
 		}
-		con, er := ioutil.ReadAll(f)
-		if er != nil {
-			fmt.Printf("\nfailed to read CMD file: %v\n", er)
+		con, err := ioutil.ReadAll(f)
+		if err != nil {
+			fmt.Printf("\nfailed to read CMD file: %v\n", err)
 			return
 		}
 		cmd = string(con)
 		f.Close()
 	}
 
-	if help {
-		flag.Usage()
+	// 缓存目录创建
+	workDirExists, err := pathExists(workDir)
+	if err != nil {
+		fmt.Printf("\nfailed to read WORKDIR: %v\n", err)
 		return
 	}
+	if workDirExists {
+		if !isDir(workDir) {
+			fmt.Println("the given workdir is not a directory")
+			return
+		}
+	} else {
+		err := os.MkdirAll(workDir, os.ModePerm)
+		if err != nil {
+			fmt.Printf("\nfailed to create workdir: %v\n", err)
+			return
+		}
+	}
+
 	//创建监听退出chan
 	c := make(chan os.Signal)
 	defer close(c)
@@ -162,4 +183,30 @@ func parseHome(homeEnv, envKey, iden string) (path string) {
 		}
 	}
 	return
+}
+
+// pathExists 判断路径是否存在
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+// isDir 判断所给路径是否为文件夹
+func isDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// isFile 判断所给路径是否为文件
+func isFile(path string) bool {
+	return !isDir(path)
 }
