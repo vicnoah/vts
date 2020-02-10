@@ -119,7 +119,10 @@ func Start() {
 			return
 		}
 		f.Close()
-		cmd = string(con)
+		s := string(con)
+		s = strings.Replace(s, "\r", "", -1)
+		s = strings.Replace(s, "\n", "", -1)
+		cmd = s
 	}
 
 	// 缓存目录创建
