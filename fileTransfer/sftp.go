@@ -45,7 +45,7 @@ func (s *SFTP) Client() *sftp.Client {
 }
 
 // Send 上传文件
-func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
+func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer, bufferSize int) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -72,7 +72,7 @@ func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err
 			return
 		default:
 			if !working {
-				_, err = io.CopyBuffer(dst, src, make([]byte, 10*1024*1024))
+				_, err = io.CopyBuffer(dst, src, make([]byte, bufferSize*1024))
 				done = true
 				return
 			}
@@ -85,7 +85,7 @@ func (s *SFTP) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err
 }
 
 // Recv 下载文件
-func (s *SFTP) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
+func (s *SFTP) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer, bufferSize int) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -114,7 +114,7 @@ func (s *SFTP) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (err
 			if !working {
 				working = true
 				go func() {
-					_, err = io.CopyBuffer(dst, src, make([]byte, 10*1024*1024))
+					_, err = io.CopyBuffer(dst, src, make([]byte, bufferSize*1024))
 					done = true
 					return
 				}()

@@ -12,16 +12,52 @@ const (
 )
 
 // Run 开始转码作业
-func Run(ctx context.Context, cmd, ext, formats, filters, workDir, remoteDir, mode, sftpUser, sftpPass, sftpAddr string, sftpPort int, sftpAuth, sftpIdentityFile, sftpIdentityPass string) (err error) {
+func Run(ctx context.Context,
+	cmd,
+	ext,
+	formats,
+	filters,
+	workDir,
+	remoteDir,
+	mode string,
+	bufferSize int,
+	sftpUser,
+	sftpPass,
+	sftpAddr string,
+	sftpPort int,
+	sftpAuth,
+	sftpIdentityFile,
+	sftpIdentityPass string) (err error) {
 	switch mode {
 	case _MODE_SFTP:
-		er := runSFTP(ctx, cmd, ext, formats, filters, workDir, remoteDir, sftpUser, sftpPass, sftpAddr, sftpPort, sftpAuth, sftpIdentityFile, sftpIdentityPass)
+		er := runSFTP(ctx,
+			cmd,
+			ext,
+			formats,
+			filters,
+			workDir,
+			remoteDir,
+			bufferSize,
+			sftpUser,
+			sftpPass,
+			sftpAddr,
+			sftpPort,
+			sftpAuth,
+			sftpIdentityFile,
+			sftpIdentityPass)
 		if er != nil {
 			err = er
 			return
 		}
 	case _MODE_LOCAL:
-		er := runLocal(ctx, cmd, ext, formats, filters, workDir, remoteDir)
+		er := runLocal(ctx,
+			cmd,
+			ext,
+			formats,
+			filters,
+			workDir,
+			remoteDir,
+			bufferSize)
 		if er != nil {
 			err = er
 			return

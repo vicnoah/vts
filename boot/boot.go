@@ -23,6 +23,7 @@ var (
 	cmdFile          string // 转码命令文件
 	mode             string // 工作模式
 	ext              string // 文件扩展名
+	bufferSize       int    // 文件拷贝缓冲区大小
 	sftpUser         string // sftp用户名
 	sftpPass         string // sftp密码
 	sftpAddr         string // sftp地址
@@ -45,6 +46,7 @@ func init() {
 	flag.StringVar(&filters, "flt", "vr", "You would like to `filting's path`")
 
 	flag.StringVar(&mode, "mode", "sftp", "`work mode.` eg: sftp, local, nfs")
+	flag.IntVar(&bufferSize, "bs", 10*1024, "`file copy cache size` in KB")
 
 	flag.StringVar(&workDir, "w", "~/vts", "local `workdir`: download, transcode, upload")
 	flag.StringVar(&remoteDir, "r", "/emby/video", "set `remote directory` path")
@@ -168,7 +170,22 @@ func Start() {
 
 // boot 引导主程序
 func boot(ctx context.Context) {
-	err := worker.Run(ctx, cmd, ext, formats, filters, workDir, remoteDir, mode, sftpUser, sftpPass, sftpAddr, sftpPort, sftpAuth, sftpIdentityFile, sftpIdentityPass)
+	err := worker.Run(ctx,
+		cmd,
+		ext,
+		formats,
+		filters,
+		workDir,
+		remoteDir,
+		mode,
+		bufferSize,
+		sftpUser,
+		sftpPass,
+		sftpAddr,
+		sftpPort,
+		sftpAuth,
+		sftpIdentityFile,
+		sftpIdentityPass)
 	if err != nil {
 		fmt.Printf("\n%v\n", err)
 	}

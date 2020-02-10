@@ -13,7 +13,13 @@ import (
 	"github.com/vicnoah/vts/transcode"
 )
 
-func batch(ctx context.Context, fileNames []string, w string, ext string, cmd string, fr file_transfer.Fser) (err error) {
+func batch(ctx context.Context,
+	fileNames []string,
+	w,
+	ext,
+	cmd string,
+	bufferSize int,
+	fr file_transfer.Fser) (err error) {
 	ts := getTaskList()
 	sp := file_transfer.NewFileTransfer(fr)
 	defer func() {
@@ -59,7 +65,7 @@ func batch(ctx context.Context, fileNames []string, w string, ext string, cmd st
 			return os.Remove(cacheName)
 		})
 
-		er = sp.Recv(ctx, dlSrcFile, dlDstFile)
+		er = sp.Recv(ctx, dlSrcFile, dlDstFile, bufferSize)
 		if er != nil {
 			err = er
 			return
@@ -109,7 +115,7 @@ func batch(ctx context.Context, fileNames []string, w string, ext string, cmd st
 			return sp.Remove(remoteFile)
 		})
 
-		er = sp.Send(ctx, ulSrcFile, ulDstFile)
+		er = sp.Send(ctx, ulSrcFile, ulDstFile, bufferSize)
 		if er != nil {
 			err = er
 			return

@@ -8,8 +8,8 @@ import (
 
 // Fser 文件操作接口
 type Fser interface {
-	Send(context.Context, ReadStater, io.Writer) error
-	Recv(context.Context, ReadStater, io.Writer) error
+	Send(context.Context, ReadStater, io.Writer, int) error
+	Recv(context.Context, ReadStater, io.Writer, int) error
 	ReadDir(string) ([]os.FileInfo, error)
 	Open(string) (ReadWriteStatCloser, error)
 	OpenFile(string, int) (ReadWriteStatCloser, error)

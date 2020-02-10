@@ -12,7 +12,21 @@ const (
 	_SFTP_AUTH_KEY      = "key"
 )
 
-func runSFTP(ctx context.Context, cmd, ext, formats, filters, w, r, u, pass, addr string, port int, auth, identityFile, identityPass string) (err error) {
+func runSFTP(ctx context.Context,
+	cmd,
+	ext,
+	formats,
+	filters,
+	w,
+	r string,
+	bufferSize int,
+	u,
+	pass,
+	addr string,
+	port int,
+	auth,
+	identityFile,
+	identityPass string) (err error) {
 	var (
 		ssh = file_transfer.NewSSH()
 		sp  = file_transfer.NewSFTP()
@@ -63,7 +77,7 @@ func runSFTP(ctx context.Context, cmd, ext, formats, filters, w, r, u, pass, add
 		fmt.Println(f)
 	}
 	fmt.Printf("\n开始转码作业:\n")
-	err = batch(ctx, pts, w, ext, cmd, sp)
+	err = batch(ctx, pts, w, ext, cmd, bufferSize, sp)
 	if err != nil {
 		err = fmt.Errorf("batch transcode video error: %v", err)
 		return

@@ -22,7 +22,7 @@ type Local struct {
 }
 
 // Send 发送文件
-func (l *Local) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
+func (l *Local) Send(ctx context.Context, srcFile ReadStater, dst io.Writer, bufferSize int) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -49,7 +49,7 @@ func (l *Local) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (er
 			return
 		default:
 			if !working {
-				_, err = io.CopyBuffer(dst, src, make([]byte, 10*1024*1024))
+				_, err = io.CopyBuffer(dst, src, make([]byte, bufferSize*1024))
 				done = true
 				return
 			}
@@ -62,7 +62,7 @@ func (l *Local) Send(ctx context.Context, srcFile ReadStater, dst io.Writer) (er
 }
 
 // Recv 接收文件
-func (l *Local) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (err error) {
+func (l *Local) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer, bufferSize int) (err error) {
 	fileInfo, err := srcFile.Stat()
 	if err != nil {
 		return
@@ -89,7 +89,7 @@ func (l *Local) Recv(ctx context.Context, srcFile ReadStater, dst io.Writer) (er
 			return
 		default:
 			if !working {
-				_, err = io.CopyBuffer(dst, src, make([]byte, 10*1024*1024))
+				_, err = io.CopyBuffer(dst, src, make([]byte, bufferSize*1024))
 				done = true
 				return
 			}
