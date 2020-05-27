@@ -8,11 +8,7 @@
 docker run -i --rm -v=%workdir%:%workdir% --device /dev/dri/renderD128 jrottenberg/ffmpeg:4.1-vaapi -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device /dev/dri/renderD128 -i %input% -c:v vp9_vaapi -c:a libvorbis %output%
 ```
 
-- 具体命令参考ffmpeg使用方法，及
-
-[docker ffmpeg]: https://hub.docker.com/r/jrottenberg/ffmpeg/
-
-的使用方法，例子是基于英特尔集显vaapi的，也可参考docker ffmpeg调用nvdia独显的nvenc。
+- 具体命令参考ffmpeg使用方法，可参考[docker ffmpeg](https://hub.docker.com/r/jrottenberg/ffmpeg/ "docker ffmpeg")的使用方法，例子是基于英特尔集显vaapi的，也可参考docker ffmpeg调用nvdia独显的nvenc。
 
 - 旧CPU及旧显卡并不支持最新的视频编码具体支持程度请参考intel vaapi，nvida nvenc官网的描述
 
